@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-//test
+//test2
 Route::get('/test/api', static function () {
     $data=DB::table('daibi')
         ->get();
