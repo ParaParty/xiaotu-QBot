@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Message;
 
+use App\Class\CQ;
 use App\Class\QBotDB;
 use App\Class\QBotHttpApi;
 use App\Class\QBotRequest\group_message;
@@ -23,8 +24,6 @@ class GroupMessage extends Controller
     {
 
         #region 开始
-        //时间戳
-        $time = time();
         //Http Api
         $qbot = new QBotHttpApi(
             QBotDB::getConfig('system', 'http_address'),
@@ -55,7 +54,19 @@ class GroupMessage extends Controller
         #endregion
 
         #region 签到系统
+        if($fromData->message==='签到'){
 
+            if(!$SignInRecord=QBotDB::getUserData($fromData->user_id,
+                '签到系统->签到记录->'.date('Ymd',$fromData->time))){
+                return $qbot->rapidResponse(
+                    CQ::at($fromData->user_id).' 您今日还没有签到，签到系统正在开发中，敬请期待。');
+            }
+            return $qbot->rapidResponse(
+                CQ::at($fromData->user_id)." 您今日已签到
+                获得");
+
+
+        }
 
         #endregion
 
