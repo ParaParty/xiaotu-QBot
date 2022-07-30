@@ -11,34 +11,31 @@ class TCode
 
     ];
 
+    //屎山改，能润就行
     public static function replace(string $str, array $data = []): string
     {
-        preg_match_all('/(?<!\\\\)\\{.+?(?!\\\\)\\}/', $str, $arr, PREG_UNMATCHED_AS_NULL);
+        preg_match_all('/(?<!\\\\){.+?(?!\\\\)}/', $str, $arr, PREG_UNMATCHED_AS_NULL);
         foreach ($arr[0] as $key) {
             $key2 = substr($key, 1, -1);
             if (isset($data[$key2])) {
                 //提交参数
                 $str = str_replace($key, $data[$key2], $str);
+            } elseif ($key2[0]==='@') {
+                if(is_numeric($qq=substr($key2,1))){
+                    //QQ艾特
+                    //懒的判断是不是标准QQ号了，毕竟屎山改，能润就行
+                    $str = str_replace($key, self::at($qq), $str);
+                }
             } elseif (isset(self::$face[$key2])) {
                 //QQ小表情
                 $str = str_replace($key, self::makeCQ_code('face', [
                     'id' => self::$face[$key2]
                 ]), $str);
-            } elseif ($setting = QBotDB::getConfig($key2)) {
-                $str = str_replace($key, $setting, $str);
             }
 
         }
-        //艾特
-        preg_match_all('/(?<!\\\\)@@.+?(?!\\\\)@/', $str, $arr, PREG_UNMATCHED_AS_NULL);
-        foreach ($arr[0] as $key) {
-            $key2 = substr($key, 2, -1);
-            if ((string)(int)$key2 === $key2) {
-                $str = str_replace($key, "[@$key2]", $str);
-            }
-        }
-        //@转义处理
-        return str_replace(array('\\@', '[@QQ]'), array('@', '\\u005b@QQ]'), $str);
+        //反转义处理
+        return str_replace(array('\\{', '\\}'), array('{', '}'), $str);
     }
 
     private static function makeCQ_code(string $name, array $data): string
