@@ -210,7 +210,22 @@ class QBotHttpApi
     #endregion
 
     #region Event
-
+    /**
+     * 群组单人禁言
+     * @param int $group_id 群组id
+     * @param int $user_id 用户id
+     * @param int $duration 禁言时长，单位为秒，0为解禁
+     * @return bool 请求成功与否
+     */
+    public function set_group_ban(int $group_id,int $user_id,int $duration=0): bool
+    {
+        $api = 'set_group_ban';
+        return $this->request($api, [
+            'group_id' => $group_id,
+            'user_id' => $user_id,
+            'duration' => $duration,
+        ]);
+    }
     #endregion
 
     #region Other
@@ -223,7 +238,7 @@ class QBotHttpApi
      */
     public function rapidResponse(string $reply, array $data = []): array|string
     {
-        $data['reply'] = $reply;
+        $data['reply'] =TCode::replace($reply);
         try {
             $data =json_decode(
                 str_replace('\\\\u','\\u',

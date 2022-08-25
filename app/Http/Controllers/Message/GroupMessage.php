@@ -2,7 +2,17 @@
 
 namespace App\Http\Controllers\Message;
 
-use App\Class\CQ;
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelLow;
+use Endroid\QrCode\Label\Label;
+use Endroid\QrCode\Logo\Logo;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
+use Endroid\QrCode\Writer\PngWriter;
+
+use App\Class\Api\Tianxing\tianxing;
+use App\Class\TCode;
 use App\Class\QBotDB;
 use App\Class\QBotHttpApi;
 use App\Class\QBotRequest\group_message;
@@ -11,6 +21,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use mysql_xdevapi\Table;
 
 class GroupMessage extends Controller
 {
@@ -29,8 +40,10 @@ class GroupMessage extends Controller
             QBotDB::getConfig('system', 'http_address'),
             QBotDB::getConfig('system', 'http_access_token'));
         //消息数据
-
         $fromData = new group_message($request->input());
+        //Api接口
+        //天行Api
+        $Api_Tianxing = new Tianxing(QBotDB::getConfig('Api', '天行数据->apiKey'));
         #endregion
 
         #region 发言统计
@@ -39,7 +52,8 @@ class GroupMessage extends Controller
             'group_id' => $fromData->group_id,
             'message' => $fromData->message,
             'message_id' => $fromData->message_id,
-            'datetime' => date('Y-m-d H:i:s')
+            'datetime' => date('Y-m-d H:i:s'),
+            'type' => 1
         ]);
         #endregion
 
@@ -54,30 +68,129 @@ class GroupMessage extends Controller
         #endregion
 
         #region 签到系统
-        if($fromData->message==='签到'){
-
-            if(!$SignInRecord=QBotDB::getUserData($fromData->user_id,
-                '签到系统->签到记录->'.date('Ymd',$fromData->time))){
+        if ($fromData->message === '签到') {
+            $tmp = date('Y-m-d', $fromData->time);
+            if (!$checkinRecord = QBotDB::getUserData($fromData->user_id, "签到系统->签到记录->$tmp", true)) {
+                $checkinConfig = QBotDB::getConfig('签到系统', '', true);
+                $checkinData = [
+                    '旭日币' => random_int($checkinConfig->旭日币->下限, $checkinConfig->旭日币->上限),
+                    '旭日勋章' => random_int($checkinConfig->旭日勋章->下限, $checkinConfig->旭日勋章->上限),
+                    '时间' => $fromData->time
+                ];
+                QBotDB::setUserData($fromData->user_id, "签到系统->签到记录->$tmp", $checkinData);
+                QBotDB::operate_money($fromData->group_id, $fromData->user_id, $checkinData['旭日币'], $fromData->time);
+                QBotDB::operate_detail($fromData->group_id, $fromData->user_id, $checkinData['旭日勋章']);
+                $tmp = DB::table('users')
+                    ->whereNotNull("user_data->签到系统->签到记录->$tmp")
+                    ->count();
+                $tmp2 = $tmp >= 4 ? '4+' : (string)$tmp;
                 return $qbot->rapidResponse(
-                    CQ::at($fromData->user_id).' 您今日还没有签到，签到系统正在开发中，敬请期待。');
+                    TCode::at($fromData->user_id) . " \n签到成功，获得：\n"
+                    . "{system_旭日币}{$checkinData['旭日币']}{system_旭日币}\n"
+                    . "{system_旭日勋章}{$checkinData['旭日勋章']}{system_旭日勋章}\n"
+                    . "今天{emoji_排名_$tmp2}第{$tmp}位签到者{emoji_排名_$tmp2}"
+                );
             }
             return $qbot->rapidResponse(
-                CQ::at($fromData->user_id)." 您今日已签到
-                获得");
+                TCode::at($fromData->user_id) . "\n"
+                . "您今日已签到，获得：\n"
+                . "{system_旭日币}$checkinRecord->旭日币{system_旭日币}\n"
+                . "{system_旭日勋章}$checkinRecord->旭日勋章{system_旭日勋章}\n"
+                . '{emoji_钟表}' . date('Y-m-d H:i:s', $checkinRecord->时间) . '{emoji_钟表}'
+            );
 
 
         }
 
+        if ($fromData->message === '查询') {
+            return $qbot->rapidResponse(
+                TCode::at($fromData->user_id) . "\n"
+                . "余额：\n"
+                . '{system_旭日币}' . QBotDB::operate_money($fromData->group_id, $fromData->user_id) . "{system_旭日币}\n"
+                . '{system_旭日勋章}' . QBotDB::operate_detail($fromData->group_id, $fromData->user_id) . "{system_旭日勋章}"
+            );
+
+        }
+        #endregion
+
+        #region 娱乐系统
+        //智能闲聊
+        if ($cmd[0] === TCode::at($fromData->self_id) && count($cmd) >= 2) {
+            $tmp = $cmd;
+            unset($tmp[0]);
+            $question = trim(implode(' ', $tmp));
+            $robot = $Api_Tianxing->robot($question, (string)$fromData->user_id);
+            if ($robot->code !== 200) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' 系统繁忙请稍后再试，如若多次出现请联系管理员');
+            }
+            if (($data = $robot->getNextData())->type !== 'text') {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' 暂不支持的返回类型，正在开发中');
+            }
+            if (!str_contains($data->reply, '<br>')) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . $data->reply);
+            }
+            return $qbot->rapidResponse(TCode::at($fromData->user_id) . "\n"
+                . $data->reply);
+        }
+
+        //随机图片
+        if ($fromData->message === '来张图片') {
+            $price = QBotDB::getConfig('娱乐系统', '随机图片->来张图片',true);
+            $ret=QBotDB::operate_price($fromData->group_id,$fromData->user_id,$price);
+            if ($ret!==true) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . $ret);
+            }
+            return $qbot->rapidResponse(TCode::image('https://api.ixiaowai.cn/api/api.php?'
+                . md5($fromData->user_id . $fromData->message_id . $fromData->time)));
+        }
+        #endregion
+
+        #region 便民系统
+
+        //二维码生成
+        if ($cmd[0] === '二维码生成' && count($cmd) >= 2) {
+            $tmp = $cmd;
+            unset($tmp[0]);
+            $string = trim(implode(' ', $tmp));
+            if (strlen($string) > 400) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id).' 超出长度限制。');
+            }
+            $price = QBotDB::getConfig('便民系统', '二维码生成',true);
+            $price->旭日币*=strlen($string)+100;
+            $price->旭日勋章*=(int)(strlen($string)/100)+1;
+            $ret=QBotDB::operate_price($fromData->group_id,$fromData->user_id,$price);
+            if ($ret!==true) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . $ret);
+            }
+            $qrCode = QrCode::create($string)
+                ->setEncoding(new Encoding('UTF-8'))
+                ->setErrorCorrectionLevel(new ErrorCorrectionLevelLow())
+                ->setSize(600)
+                ->setMargin(10)
+                ->setRoundBlockSizeMode(new RoundBlockSizeModeMargin())
+                ->setForegroundColor(new Color(0, 0, 0))
+                ->setBackgroundColor(new Color(255, 255, 255));
+            $writer = new PngWriter();
+            $img='base64://'.substr($writer->write($qrCode)->getDataUri(),22);
+            return $qbot->rapidResponse(TCode::image($img));
+        }
+
+        #endregion
+
+        #region 其他
+        if ($fromData->message === '作死') {
+            $ban=random_int(20,80);
+            $qbot->set_group_ban($fromData->group_id,$fromData->user_id,$ban);
+            return $qbot->rapidResponse(TCode::at($fromData->user_id).' {face_鼓掌}恭喜作死成功，获得'.$ban.'秒禁言。');
+        }
         #endregion
 
 
-
-
-        //没有触发命令，修改发言统计'is_cmd'字段;
+        //没有触发命令，修改发言统计 type 字段;
         DB::table('speech')
-            ->where('user_id',$fromData->user_id)
-            ->where('message_id',$fromData->message_id)
-            ->update(['is_cmd'=>false]);
+            ->where('user_id', $fromData->user_id)
+            ->where('message_id', $fromData->message_id)
+            ->update(['type' => 0]);
         return [];
     }
 }

@@ -1,5 +1,15 @@
 <?php
 
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelLow;
+use Endroid\QrCode\Label\Label;
+use Endroid\QrCode\Logo\Logo;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
+use Endroid\QrCode\Writer\PngWriter;
+
+use App\Class\TCode;
 use App\Class\QBotDB;
 use App\Class\QBotHttpApi;
 use App\Class\QBotRequest\private_message;
@@ -34,23 +44,16 @@ use Illuminate\Support\Facades\Route;
 
 //test2
 Route::get('/test/api', static function () {
-    $data=DB::table('daibi')
-        ->get();
-    foreach ($data as $user) {
-        QBotDB::setUserData($user->qq,'银行系统->旭日币',$user->money);
-        QBotDB::setUserData($user->qq,'银行系统->旭日勋章',$user->medal);
-    }
-
-
+    dd(strlen('你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你1你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你1'));
 });
 Route::get('/test/req', static function () {
     echo(Http::asJson()->post('http://qbot.xuri.team/api/index', [
         'time' => time(),
         'post_type' => 'message',
         'message_type' => 'group',
-        'sub_type'=>'normal',
+        'sub_type' => 'normal',
         'user_id' => 205998108,
-        'group_id'=>465434639,
+        'group_id' => 465434639,
         'message' => 'test',
         'message_id' => '555',
         'sender' => [

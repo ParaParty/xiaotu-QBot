@@ -42,12 +42,14 @@ class group_message extends _msg
 
     public function __construct(array $data)
     {
+        $this->time = $data['time'];
+        $this->self_id = $data['self_id'];
         $this->message_id = $data['message_id'];
         $this->message = $data['message'];
         $this->group_id = $data['group_id'];
         $this->user_id = $data['sender']['user_id'];
         $this->user_nickname = $data['sender']['nickname'];
-        $this->user_role = $data['sender']['role']??'';
+        $this->user_role = $data['sender']['role'];
         $this->user_title = $data['sender']['title']??'';
         $this->user_card = $data['sender']['card']??'';
         $this->user_level= $data['sender']['level']??'';

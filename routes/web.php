@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+//文档  暂定
+Route::get('/help', function () {
+    return redirect()->away('https://1m29yvnp67.k.topthink.com/@xuriqbot');
+});

@@ -21,6 +21,7 @@ class private_message extends _msg
 
     public function __construct(array $data)
     {
+        $this->time = $data['time'];
         $this->message_id = $data['message_id'];
         $this->message = $data['message'];
         $this->user_id = $data['sender']['user_id'];

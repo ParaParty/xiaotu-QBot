@@ -31,7 +31,6 @@ class MessageRoute extends Controller
             //鉴权失败
             abort(401);
         }
-
         //路由
         switch ($request->input('post_type')) {
             case 'message':
