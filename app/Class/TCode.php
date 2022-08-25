@@ -20,6 +20,7 @@ class TCode
         'face_太阳' => 74,
         'face_鼓掌' => 99,
         'face_庆祝' => 144,
+        'face_打call' => 311,
 
 
         //emoji
@@ -27,6 +28,9 @@ class TCode
         'emoji_排名_2' => '\ud83e\udd48',
         'emoji_排名_3' => '\ud83e\udd49',
         'emoji_排名_4+' => '\ud83c\udfc5',
+
+        'emoji_圈'=>'\u2b55',
+        'emoji_叉'=>'\u274c',
 
         'emoji_钟表' => '\ud83d\udd70\ufe0f',
 

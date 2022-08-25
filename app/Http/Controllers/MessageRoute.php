@@ -64,7 +64,7 @@ class MessageRoute extends Controller
                 switch ($request->input('request_type')) {
                     case 'group':
                         return redirect(route('request.group', $request->input()));
-                    case 'private':
+                    case 'friend':
                         return redirect(route('request.private', $request->input()));
                     default:
                         abort(400);

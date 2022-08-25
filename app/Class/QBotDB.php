@@ -161,7 +161,7 @@ class QBotDB
             return '你的旭日勋章不足';
         }
         self::operate_money($group_id, $user_id, -$money);
-        self::operate_detail($group_id, $user_id, -$detail);
+        self::operate_medal($group_id, $user_id, -$detail);
         return true;
     }
 
@@ -305,7 +305,7 @@ class QBotDB
      * @param int $change 偏移值，0为不改变仅查询
      * @return int 返回修改后的值
      */
-    public static function operate_detail(int $group_id, int $user_id, int $change = 0): int
+    public static function operate_medal(int $group_id, int $user_id, int $change = 0): int
     {
         $query = self::getUserData($user_id, '银行系统->货币->旭日勋章');
         if ($change) {

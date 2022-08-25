@@ -1,5 +1,6 @@
 <?php
 
+use App\Class\Api\OwnThink\OwnThink;
 use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelLow;
@@ -45,7 +46,8 @@ use Metowolf\Meting;
 
 //test2
 Route::get('/test/api', static function () {
-
+    $Api_OwnThink = new OwnThink(QBotDB::getConfig('Api', '思知->Appid'));
+    dd($Api_OwnThink->question('你好','123'));
 });
 Route::get('/test/req', static function () {
     echo(Http::asJson()->post('http://qbot.xuri.team/api/index', [
