@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Message;
 
+use JsonException;
+use Metowolf\Meting;
+
 use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelLow;
@@ -21,7 +24,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use mysql_xdevapi\Table;
+use phpDocumentor\Reflection\DocBlock\Tags\Source;
 
 class GroupMessage extends Controller
 {
@@ -135,9 +138,9 @@ class GroupMessage extends Controller
 
         //随机图片
         if ($fromData->message === '来张图片') {
-            $price = QBotDB::getConfig('娱乐系统', '随机图片->来张图片',true);
-            $ret=QBotDB::operate_price($fromData->group_id,$fromData->user_id,$price);
-            if ($ret!==true) {
+            $price = QBotDB::getConfig('娱乐系统', '随机图片->来张图片->价格', true);
+            $ret = QBotDB::operate_price($fromData->group_id, $fromData->user_id, $price);
+            if ($ret !== true) {
                 return $qbot->rapidResponse(TCode::at($fromData->user_id) . $ret);
             }
             return $qbot->rapidResponse(TCode::image('https://api.ixiaowai.cn/api/api.php?'
@@ -153,13 +156,13 @@ class GroupMessage extends Controller
             unset($tmp[0]);
             $string = trim(implode(' ', $tmp));
             if (strlen($string) > 400) {
-                return $qbot->rapidResponse(TCode::at($fromData->user_id).' 超出长度限制。');
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' 超出长度限制。');
             }
-            $price = QBotDB::getConfig('便民系统', '二维码生成',true);
-            $price->旭日币*=strlen($string)+100;
-            $price->旭日勋章*=(int)(strlen($string)/100)+1;
-            $ret=QBotDB::operate_price($fromData->group_id,$fromData->user_id,$price);
-            if ($ret!==true) {
+            $price = QBotDB::getConfig('便民系统', '二维码生成->价格', true);
+            $price->旭日币 *= strlen($string) + 100;
+            $price->旭日勋章 *= (int)(strlen($string) / 100) + 1;
+            $ret = QBotDB::operate_price($fromData->group_id, $fromData->user_id, $price);
+            if ($ret !== true) {
                 return $qbot->rapidResponse(TCode::at($fromData->user_id) . $ret);
             }
             $qrCode = QrCode::create($string)
@@ -171,17 +174,52 @@ class GroupMessage extends Controller
                 ->setForegroundColor(new Color(0, 0, 0))
                 ->setBackgroundColor(new Color(255, 255, 255));
             $writer = new PngWriter();
-            $img='base64://'.substr($writer->write($qrCode)->getDataUri(),22);
+            $img = 'base64://' . substr($writer->write($qrCode)->getDataUri(), 22);
             return $qbot->rapidResponse(TCode::image($img));
         }
 
+        //点歌
+        if ($cmd[0] === '点歌' && count($cmd) >= 2) {
+            $tmp = $cmd;
+            unset($tmp[0]);
+            $songName = trim(implode(' ', $tmp));
+            $source=QBotDB::getConfig('便民系统', '点歌->音源');
+            $song = new Meting($source);
+            try {
+                $search = json_decode($song->format(true)->search($songName), false, 512, JSON_THROW_ON_ERROR);
+            } catch (JsonException) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id).' 系统错误');
+            }
+            $source_str=[
+                'netease'=>'网易云音乐',
+                'tencent'=>'QQ音乐',
+                'kugou'=>'酷狗音乐',
+                'kuwo'=>'酷我音乐',
+                'xiami'=>'虾米音乐',
+                'baidu'=>'百度音乐'
+            ];
+            $source_card=[
+                'netease'=>'163',
+                'tencent'=>'qq',
+                'xiami'=>'xm'
+            ];
+            if (!isset($search[0])) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id)." 未在当前音源{$source_str[$source]}中搜索到歌曲");
+            }
+            $price = QBotDB::getConfig('便民系统', '点歌->价格', true);
+            $ret = QBotDB::operate_price($fromData->group_id, $fromData->user_id, $price);
+            if ($ret !== true) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . $ret);
+            }
+            return $qbot->rapidResponse(TCode::music($source_card[$source],$search[0]->id));
+        }
         #endregion
 
         #region 其他
         if ($fromData->message === '作死') {
-            $ban=random_int(20,80);
-            $qbot->set_group_ban($fromData->group_id,$fromData->user_id,$ban);
-            return $qbot->rapidResponse(TCode::at($fromData->user_id).' {face_鼓掌}恭喜作死成功，获得'.$ban.'秒禁言。');
+            $ban = random_int(20, 80);
+            $qbot->set_group_ban($fromData->group_id, $fromData->user_id, $ban);
+            return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' {face_鼓掌}恭喜作死成功，获得' . $ban . '秒禁言。');
         }
         #endregion
 

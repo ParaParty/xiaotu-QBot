@@ -30,6 +30,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use Metowolf\Meting;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,7 +45,7 @@ use Illuminate\Support\Facades\Route;
 
 //test2
 Route::get('/test/api', static function () {
-    dd(strlen('你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你1你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你你1'));
+
 });
 Route::get('/test/req', static function () {
     echo(Http::asJson()->post('http://qbot.xuri.team/api/index', [

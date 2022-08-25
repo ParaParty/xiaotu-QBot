@@ -2,6 +2,9 @@
 
 namespace App\Class;
 
+/**
+ *
+ */
 class TCode
 {
     //屎山改，能润就行
@@ -63,17 +66,41 @@ class TCode
         return str_replace(array('\\{', '\\}'), array('{', '}'), $str);
     }
 
+    /**
+     * @param int $qq
+     * @return string
+     */
     public static function at(int $qq): string
     {
         return self::makeCQ_code('at', ['qq' => $qq]);
     }
 
+    /**
+     * @param int $text
+     * @return string
+     */
     public static function tts(int $text): string
     {
         return self::makeCQ_code('tts', ['text' => $text]);
     }
 
-    private static function makeCQ_code(string $name, array $data): string
+    /**
+     * 标准音乐分享卡片
+     * @param string $type 类型 qq：QQ音乐 163：网易云音乐 xm：虾米音乐
+     * @param string $id 歌曲id
+     * @return string
+     */
+    public static function music(string $type, string $id): string
+    {
+        return self::makeCQ_code('music', ['type' => $type,'id'=>$id]);
+    }
+
+    /**
+     * @param string $name
+     * @param array $data
+     * @return string
+     */
+    public static function makeCQ_code(string $name, array $data): string
     {
         $str = "[CQ:$name";
         foreach ($data as $key => $value) {
@@ -83,6 +110,13 @@ class TCode
         return $str;
     }
 
+    /**
+     * @param string $url
+     * @param int $cache
+     * @param string $type
+     * @param int $subType
+     * @return string
+     */
     public static function image(string $url, int $cache = 0, string $type = '', int $subType = 0): string
     {
         $param = [
