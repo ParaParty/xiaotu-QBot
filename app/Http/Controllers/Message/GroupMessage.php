@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Message;
 use App\Class\Api\OwnThink\OwnThink;
 use App\Class\Api\Tianxing\Tianxing;
 use Exception;
+use Illuminate\Support\Facades\Http;
 use JsonException;
 use Metowolf\Meting;
 
@@ -122,13 +123,14 @@ class GroupMessage extends Controller
 
         #region 娱乐系统
 
+        //菜单：智能闲聊
         if ($fromData->message === '智能闲聊') {
             $interface = QBotDB::getConfig('娱乐系统', '智能闲聊->接口');
             $str = "{face_打call}智能闲聊{face_打call}\n\n"
                 . "{face_打call}当前接口{face_打call}\n"
                 . "{emoji_叉}天行数据{emoji_叉}\n"
                 . "{emoji_叉}思知{emoji_叉}";
-            $str=str_replace("{emoji_叉}$interface{emoji_叉}","{emoji_圈}$interface{emoji_圈}",$str);
+            $str = str_replace("{emoji_叉}$interface{emoji_叉}", "{emoji_圈}$interface{emoji_圈}", $str);
             return $qbot->rapidResponse($str);
         }
 
@@ -171,14 +173,21 @@ class GroupMessage extends Controller
         }
 
         //随机图片
-        if ($fromData->message === '来张图片') {
-            $price = QBotDB::getConfig('娱乐系统', '随机图片->来张图片->价格', true);
+        if (str_starts_with($fromData->message, '来张')
+            && ($price = QBotDB::getConfig('娱乐系统', "随机图片->{$fromData->message}->价格", true)) !== false) {
             $ret = QBotDB::operate_price($fromData->group_id, $fromData->user_id, $price);
             if ($ret !== true) {
                 return $qbot->rapidResponse(TCode::at($fromData->user_id) . $ret);
             }
-            return $qbot->rapidResponse(TCode::image('https://api.ixiaowai.cn/api/api.php?'
-                . md5($fromData->user_id . $fromData->message_id . $fromData->time)));
+            switch ($fromData->message) {
+                case '来张图片':
+                    return $qbot->rapidResponse(TCode::image('https://api.ixiaowai.cn/api/api.php?'
+                        . md5($fromData->user_id . $fromData->message_id . $fromData->time)));
+                case '来张修猫':
+                    $url = Http::get('https://api.thecatapi.com/v1/images/search')->json('0.url');
+                    return $qbot->rapidResponse(TCode::image($url));
+            }
+
         }
         #endregion
 
