@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Message;
 
 use App\Class\QBotDB;
 use App\Class\QBotHttpApi;
@@ -15,7 +15,7 @@ class EveryDayNews extends Command
      *
      * @var string
      */
-    protected $signature = 'Msg:EveryDayNews';
+    protected $signature = 'Message:EveryDayNews';
 
     /**
      * The console command description.
@@ -31,14 +31,13 @@ class EveryDayNews extends Command
      */
     public function handle(): int
     {
-        $newsImg=Http::get('https://api.vvhan.com/api/60s')->body();
-        $group=QBotDB::getConfig('system','group');
-
         //Http Api
         $qbot = new QBotHttpApi(
             QBotDB::getConfig('system', 'http_address'),
             QBotDB::getConfig('system', 'http_access_token'));
 
+        $newsImg=Http::get('https://api.vvhan.com/api/60s')->body();
+        $group=QBotDB::getConfig('system','group');
         $qbot->send_group_msg($group,TCode::image('base64://'.base64_encode($newsImg)));
         return 0;
     }

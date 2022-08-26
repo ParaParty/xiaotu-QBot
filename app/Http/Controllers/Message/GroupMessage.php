@@ -29,6 +29,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use phpDocumentor\Reflection\DocBlock\Tags\Source;
+use function Symfony\Component\String\u;
 
 class GroupMessage extends Controller
 {
@@ -319,6 +320,116 @@ class GroupMessage extends Controller
             foreach ($result as $item) {
                 $qbot->send_private_msg($fromData->user_id, $item);
             }
+            return [];
+        }
+
+        #endregion
+
+        #region 助手系统
+
+        //助手商店
+        if ($fromData->message === '助手商店') {
+            $goods = array_keys((array)QBotDB::getConfig('助手系统', '助手商店', true));
+            $goodsSum = count($goods);
+            $str = "{system_助手系统}助手商店{system_助手系统}\n";
+            if (empty($goodsSum)) {
+                $str .= "{system_助手系统}等待补货中{system_助手系统}";
+            } else {
+                $str .= '{system_助手系统}共' . count($goods) . "件商品{system_助手系统}\n\n";
+                $str .= '{system_助手系统}' . implode("{system_助手系统}\n{system_助手系统}", $goods) . '{system_助手系统}';
+            }
+            return $qbot->rapidResponse($str);
+        }
+
+        //商店详情
+        if (!empty((array)$goods = QBotDB::getConfig('助手系统', "助手商店->$fromData->message", true))) {
+            $str = "{system_助手系统}{$fromData->message}{system_助手系统}\n\n"
+                . "{system_旭日币}{$goods->价格->旭日币}{system_旭日币}\n"
+                . "{system_旭日勋章}{$goods->价格->旭日勋章}{system_旭日勋章}\n"
+                . "{system_助手系统}库存:{$goods->库存}{system_助手系统}\n"
+                . "{system_助手系统}限购:{$goods->限购}{system_助手系统}\n"
+                . "{system_助手系统}刷新:{$goods->刷新}{system_助手系统}\n\n"
+                . $goods->说明;
+            return $qbot->rapidResponse($str);
+        }
+
+        //购买物品
+        if ($cmd[0] === '购买' && isset($cmd[1])) {
+            $goods = QBotDB::getConfig('助手系统', "助手商店->$cmd[1]", true);
+            if (empty((array)$goods)) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' 物品不存在');
+            }
+            if ($goods->库存 <= 0) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' 物品库存不足');
+            }
+            $sum = max($cmd[2] ?? 1, 1);
+            $history = QBotDB::getCache('商店', "qq{$fromData->user_id}->$cmd[1]", true);
+            $history->购买次数 = $history->购买次数 ?? 0;
+            if ($history->购买次数 + $sum > $goods->限购) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' 超出限购额度');
+            }
+            $ret = QBotDB::operate_price($fromData->group_id, $fromData->user_id, $goods->价格);
+            if ($ret !== true) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . $ret);
+            }
+            QBotDB::setConfig('助手系统', "助手商店->{$cmd[1]}->库存", $goods->库存 - $sum);
+            QBotDB::setUserData($fromData->user_id, "助手系统->助手背包->$cmd[1]",
+                (QBotDB::getUserData($fromData->user_id, "助手系统->助手背包->$cmd[1]") ?? 0) + 1);
+            QBotDB::setCache('商店', "qq{$fromData->user_id}->$cmd[1]->购买次数", $history->购买次数 + $sum);
+            return $qbot->rapidResponse(TCode::at($fromData->user_id) . "成功购买 $cmd[1]*$sum");
+        }
+
+        //助手背包
+        if ($fromData->message === '助手背包') {
+            $goods = (array)QBotDB::getUserData($fromData->user_id, '助手系统->助手背包', true);
+            $goodsSum = count($goods);
+            $str = "{system_助手系统}助手背包{system_助手系统}\n";
+            if (empty($goodsSum)) {
+                $str .= "{system_助手系统}背包空无一物{system_助手系统}";
+            } else {
+                $str .= '{system_助手系统}共' . count($goods) . "件物品{system_助手系统}\n\n";
+                foreach ($goods as $name => $sum) {
+                    $str .= "{system_助手系统}$name*$sum{system_助手系统}\n";
+                }
+                $str = substr($str, 0, -1);
+            }
+            return $qbot->rapidResponse($str);
+        }
+
+        //使用物品
+        if ($cmd[0] === '使用' && isset($cmd[1])) {
+            $selfSum = QBotDB::getUserData($fromData->user_id, "助手系统->助手背包->$cmd[1]");
+            if ($selfSum === null) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' 你的背包中不存在此物品');
+            }
+            $sum = max($cmd[2] ?? 1, 1);
+            if ($selfSum < $sum) {
+                return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' 你的背包中此物品数量不足');
+            }
+            switch ($cmd[1]) {
+                case '助手限免卡':
+                    $data = [
+                        '昵称' => '小梦',
+                        '启用' =>true,
+                        '启用时间' => time(),
+                        '到期时间' => strtotime('+1 year')
+                    ];
+                    QBotDB::setUserData($fromData->user_id, "助手系统->我的助手", $data);
+                    $qbot->send_group_msg($fromData->group_id,TCode::at($fromData->user_id) . "成功使用 $cmd[1]*$sum");
+                    $qbot->send_private_msg($fromData->user_id,'您好，我是小梦');
+                    $qbot->send_private_msg($fromData->user_id,'接下来我将任职您的贴身小助手');
+                    $qbot->send_private_msg($fromData->user_id,'任期到'.date('Y年m月d日',$data['到期时间']));
+                    $qbot->send_private_msg($fromData->user_id,'{big_比心}');
+
+                    $qbot->send_private_msg($fromData->user_id,'请绑定城市以获得更佳体验哦');
+                    $qbot->send_private_msg($fromData->user_id,'绑定格式：绑定 城市名');
+                    $qbot->send_private_msg($fromData->user_id,'例如：');
+                    $qbot->send_private_msg($fromData->user_id,'绑定 西安');
+                    break;
+                default:
+                    return $qbot->rapidResponse(TCode::at($fromData->user_id) . '使用失败');
+            }
+            QBotDB::setUserData($fromData->user_id, "助手系统->助手背包->$cmd[1]", $selfSum - $sum);
             return [];
         }
 

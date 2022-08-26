@@ -9,10 +9,8 @@ use App\Class\QBotReturn\send_group_msg;
 use App\Class\QBotReturn\send_private_msg;
 use App\Class\QBotReturn_Base\_forward_msg;
 use App\Class\QBotReturn_Base\_sender;
-use http\Env\Response;
 use http\Message;
 use Illuminate\Support\Facades\Http;
-use mysql_xdevapi\Result;
 use phpDocumentor\Reflection\Types\Boolean;
 
 class QBotHttpApi
@@ -51,6 +49,7 @@ class QBotHttpApi
     public function send_group_msg(string $group_id, string $message, bool $auto_escape = false): bool|send_group_msg
     {
         $api = 'send_group_msg';
+        $message=TCode::replace($message);
         if (is_array($result = $this->request($api, [
             'group_id' => $group_id,
             'message' => $message,
@@ -118,6 +117,7 @@ class QBotHttpApi
     public function send_private_msg(int $user_id, string $message, bool $auto_escape = false): bool|send_private_msg
     {
         $api = 'send_private_msg';
+        $message=TCode::replace($message);
         if (is_array($result = $this->request($api, [
             'user_id' => $user_id,
             'message' => $message,

@@ -46,15 +46,7 @@ use Metowolf\Meting;
 
 //test2
 Route::get('/test/api', static function () {
-    $newsImg=Http::get('https://api.vvhan.com/api/60s')->body();
-    $group=QBotDB::getConfig('system','group');
 
-    //Http Api
-    $qbot = new QBotHttpApi(
-        QBotDB::getConfig('system', 'http_address'),
-        QBotDB::getConfig('system', 'http_access_token'));
-
-    $qbot->send_group_msg($group,TCode::image('base64://'.base64_encode($newsImg)));
 });
 Route::get('/test/req', static function () {
     echo(Http::asJson()->post('http://qbot.xuri.team/api/index', [

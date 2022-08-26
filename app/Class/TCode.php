@@ -16,12 +16,20 @@ class TCode
         'system_旭日勋章' => '\ud83c\udf96\ufe0f',
 
 
+        'system_助手系统' => 66,
+
+
         //QQ小表情
+        'face_爱心' => 66,
         'face_太阳' => 74,
         'face_鼓掌' => 99,
         'face_庆祝' => 144,
         'face_打call' => 311,
+        'face_比心' => 319,
 
+        //QQ大表情
+
+        'big_比心' => 319,
 
         //emoji
         'emoji_排名_1' => '\ud83e\udd47',
@@ -29,8 +37,8 @@ class TCode
         'emoji_排名_3' => '\ud83e\udd49',
         'emoji_排名_4+' => '\ud83c\udfc5',
 
-        'emoji_圈'=>'\u2b55',
-        'emoji_叉'=>'\u274c',
+        'emoji_圈' => '\u2b55',
+        'emoji_叉' => '\u274c',
 
         'emoji_钟表' => '\ud83d\udd70\ufe0f',
 
@@ -54,14 +62,23 @@ class TCode
                     $str = str_replace($key, self::at($qq), $str);
                 }
             } elseif (isset(self::$face[$key2])) {
-                if (is_numeric(self::$face[$key2])) {
-                    //QQ小表情
-                    $str = str_replace($key, self::makeCQ_code('face', [
-                        'id' => self::$face[$key2]
-                    ]), $str);
-                } else {
-                    //原文（暂定）
-                    $str = str_replace($key, self::$face[$key2], $str);
+                switch (substr($key2, 0, strpos($key2, '_'))) {
+                    case 'face':
+                        //QQ小表情
+                        $str = str_replace($key, self::makeCQ_code('face', [
+                            'id' => self::$face[$key2]
+                        ]), $str);
+                        break;
+                    case 'big':
+                        //QQ大表情
+                        $str = str_replace($key, self::makeCQ_code('face', [
+                            'id' => self::$face[$key2],
+                            'type' => 'sticker'
+                        ]), $str);
+                        break;
+                    default:
+                        //原文（暂定）
+                        $str = str_replace($key, self::$face[$key2], $str);
                 }
             }
 
@@ -77,6 +94,21 @@ class TCode
     public static function at(int $qq): string
     {
         return self::makeCQ_code('at', ['qq' => $qq]);
+    }
+
+    /**
+     * @param string $name
+     * @param array $data
+     * @return string
+     */
+    public static function makeCQ_code(string $name, array $data): string
+    {
+        $str = "[CQ:$name";
+        foreach ($data as $key => $value) {
+            $str .= ",$key=$value";
+        }
+        $str .= ']';
+        return $str;
     }
 
     /**
@@ -96,22 +128,7 @@ class TCode
      */
     public static function music(string $type, string $id): string
     {
-        return self::makeCQ_code('music', ['type' => $type,'id'=>$id]);
-    }
-
-    /**
-     * @param string $name
-     * @param array $data
-     * @return string
-     */
-    public static function makeCQ_code(string $name, array $data): string
-    {
-        $str = "[CQ:$name";
-        foreach ($data as $key => $value) {
-            $str .= ",$key=$value";
-        }
-        $str .= ']';
-        return $str;
+        return self::makeCQ_code('music', ['type' => $type, 'id' => $id]);
     }
 
     /**
@@ -139,7 +156,7 @@ class TCode
                 break;
         }
         if ($cache !== 0) {
-            $param['cache']=$cache;
+            $param['cache'] = $cache;
         }
         return self::makeCQ_code('image', $param);
     }
