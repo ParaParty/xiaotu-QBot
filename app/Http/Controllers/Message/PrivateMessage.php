@@ -27,6 +27,7 @@ class PrivateMessage extends Controller
      */
     public function __invoke(Request $request): array|string
     {
+        #region 开始
         //Http Api
         $qbot = new QBotHttpApi(
             QBotDB::getConfig('system', 'http_address'),
@@ -34,12 +35,33 @@ class PrivateMessage extends Controller
 
         //收到的请求
         $fromData = new private_message($request->input());
+
         //Api接口
         //天行数据
         $Api_Tianxing = new Tianxing(QBotDB::getConfig('Api', '天行数据->apiKey'));
         //思知
         $Api_OwnThink = new OwnThink(QBotDB::getConfig('Api', '思知->Appid'));
+        #endregion
 
+        #region 命令分割
+        $cmd = explode(' ', $fromData->message);
+        #endregion
+
+        #region 助手系统
+
+        if ($cmd[0] === '绑定城市' && isset($cmd[1])) {
+            $result = $Api_Tianxing->weather($cmd[1]);
+            if ($result->code !== 200
+                || ($weather = $result->getNextData()) === null) {
+                return $qbot->rapidResponse('绑定失败，该城市不存在');
+            }
+            QBotDB::setUserData($fromData->user_id, '助手系统->我的助手->城市', $weather->area);
+            return $qbot->rapidResponse('成功绑定至' . $weather->area);
+        }
+
+        #endregion
+
+        #region 智能闲聊
         $interface = QBotDB::getConfig('娱乐系统', '智能闲聊->接口');
         switch ($interface) {
             case '天行数据':
@@ -63,6 +85,7 @@ class PrivateMessage extends Controller
             default:
                 return $qbot->rapidResponse($fromData->message);
         }
+        #endregion
 
     }
 }

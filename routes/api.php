@@ -1,6 +1,7 @@
 <?php
 
 use App\Class\Api\OwnThink\OwnThink;
+use App\Class\Api\Tianxing\Tianxing;
 use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelLow;

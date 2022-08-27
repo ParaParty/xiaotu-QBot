@@ -3,6 +3,7 @@
 namespace App\Class\Api\Tianxing;
 
 use App\Class\Api\Tianxing\Response\Robot;
+use App\Class\Api\Tianxing\Response\Weather;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
@@ -15,6 +16,33 @@ class Tianxing
         $this->apiKey = $apiKey;
     }
 
+    /**天气查询(60min更新一次)
+     * @param string $city 城市名
+     * @return Weather
+     */
+    public function weather(string $city): Weather
+    {
+        $url = 'http://api.tianapi.com/tianqi/index';
+        $response = $this->request($url, [
+            'city' => $city
+        ]);
+        $ret = new Weather();
+        $ret->code = $response->json('code');
+        $ret->msg = $response->json('msg');
+        if ($ret->code === 200) {
+            $ret->data = $response->json('newslist');
+        }
+        return $ret;
+    }
+
+    private function request(string $url, array $data): Response
+    {
+        $data['key'] = $this->apiKey;
+        return Http::asForm()->post($url, $data);
+    }
+
+    //请求封装
+
     /**机器人 智能闲聊
      * @param string $question 聊天内容
      * @param string $uniqueid 唯一标识符
@@ -23,27 +51,22 @@ class Tianxing
      * @param int $restype 输入类型 0；文本  1：语音  2：人脸图片
      * @return Robot
      */
-    public function robot(string $question, string $uniqueid, int $mode = 0, int $priv = 0,int $restype = 0): Robot
+    public function robot(string $question, string $uniqueid, int $mode = 0, int $priv = 0, int $restype = 0): Robot
     {
         $url = 'http://api.tianapi.com/robot/index';
         $response = $this->request($url, [
             'question' => $question,
-            'uniqueid'=>$uniqueid,
-            'mode'=>$mode,
-            'priv'=>$priv,
-            'restype'=>$restype
+            'uniqueid' => $uniqueid,
+            'mode' => $mode,
+            'priv' => $priv,
+            'restype' => $restype
         ]);
         $ret = new Robot();
         $ret->code = $response->json('code');
         $ret->msg = $response->json('msg');
-        $ret->data = $response->json('newslist');
+        if ($ret->code === 200) {
+            $ret->data = $response->json('newslist');
+        }
         return $ret;
-    }
-
-    //请求封装
-    private function request(string $url, array $data): Response
-    {
-        $data['key'] = $this->apiKey;
-        return Http::asForm()->post($url, $data);
     }
 }

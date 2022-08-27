@@ -410,27 +410,45 @@ class GroupMessage extends Controller
                 case '助手限免卡':
                     $data = [
                         '昵称' => '小梦',
-                        '启用' =>true,
+                        '启用' => true,
                         '启用时间' => time(),
                         '到期时间' => strtotime('+1 year')
                     ];
                     QBotDB::setUserData($fromData->user_id, "助手系统->我的助手", $data);
-                    $qbot->send_group_msg($fromData->group_id,TCode::at($fromData->user_id) . "成功使用 $cmd[1]*$sum");
-                    $qbot->send_private_msg($fromData->user_id,'您好，我是小梦');
-                    $qbot->send_private_msg($fromData->user_id,'接下来我将任职您的贴身小助手');
-                    $qbot->send_private_msg($fromData->user_id,'任期到'.date('Y年m月d日',$data['到期时间']));
-                    $qbot->send_private_msg($fromData->user_id,'{big_比心}');
+                    $qbot->send_group_msg($fromData->group_id, TCode::at($fromData->user_id) . "成功使用 $cmd[1]*$sum");
+                    $qbot->send_private_msg($fromData->user_id, '您好，我是小梦');
+                    $qbot->send_private_msg($fromData->user_id, '接下来我将任职您的贴身小助手');
+                    $qbot->send_private_msg($fromData->user_id, '任期到' . date('Y年m月d日', $data['到期时间']));
+                    $qbot->send_private_msg($fromData->user_id, '{big_比心}');
 
-                    $qbot->send_private_msg($fromData->user_id,'请绑定城市以获得更佳体验哦');
-                    $qbot->send_private_msg($fromData->user_id,'绑定格式：绑定 城市名');
-                    $qbot->send_private_msg($fromData->user_id,'例如：');
-                    $qbot->send_private_msg($fromData->user_id,'绑定 西安');
+                    $qbot->send_private_msg($fromData->user_id, '请绑定城市以获得更佳体验哦');
+                    $qbot->send_private_msg($fromData->user_id, '绑定格式：绑定城市 城市名');
+                    $qbot->send_private_msg($fromData->user_id, '例如：');
+                    $qbot->send_private_msg($fromData->user_id, '绑定城市 西安');
                     break;
                 default:
                     return $qbot->rapidResponse(TCode::at($fromData->user_id) . '使用失败');
             }
             QBotDB::setUserData($fromData->user_id, "助手系统->助手背包->$cmd[1]", $selfSum - $sum);
             return [];
+        }
+
+        //我的助手
+        if ($fromData->message === '我的助手') {
+            $assistant = QBotDB::getUserData($fromData->user_id, '助手系统->我的助手', true);
+            if (empty((array)$assistant)) {
+                $str = TCode::at($fromData->user_id) . ' 你还未开通助手';
+            } elseif ($assistant->到期时间 < $fromData->time) {
+                $str = TCode::at($fromData->user_id) . ' 你的助手计划已过期';
+            }else{
+                $str=TCode::at($fromData->user_id)."\n"
+                    ."{system_助手系统}我的助手{system_助手系统}\n\n"
+                    .'{system_助手系统}启用：'.['停用','启用'][$assistant->启用]."{system_助手系统}\n"
+                    ."{system_助手系统}助手昵称：$assistant->昵称{system_助手系统}\n"
+                    .'{system_助手系统}到期时间：'.date('Y-m-d',$assistant->到期时间)."{system_助手系统}\n\n"
+                    .'※为保护隐私，更多信息请私聊查询';
+            }
+            return $qbot->rapidResponse($str);
         }
 
         #endregion

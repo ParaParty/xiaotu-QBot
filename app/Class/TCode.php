@@ -76,6 +76,15 @@ class TCode
                             'type' => 'sticker'
                         ]), $str);
                         break;
+                    case 'system':
+                        if (is_numeric(self::$face[$key2])) {
+                            $str = str_replace($key, self::makeCQ_code('face', [
+                                'id' => self::$face[$key2]
+                            ]), $str);
+                        }else{
+                            $str = str_replace($key, self::$face[$key2], $str);
+                        }
+                    break;
                     default:
                         //原文（暂定）
                         $str = str_replace($key, self::$face[$key2], $str);

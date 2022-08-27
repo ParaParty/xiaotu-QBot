@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Class\Api\Tianxing\Response;
 
 use App\Class\Api\Tianxing\BaseResponse\_base_data_robot;
@@ -10,7 +11,7 @@ class Robot extends _base_response
     /**
      * @var int 索引
      */
-    private int $i=0;
+    private int $i = 0;
 
     /**
      * @return _base_data_robot|null
@@ -20,11 +21,11 @@ class Robot extends _base_response
         if (!isset($this->data[$this->i])) {
             return null;
         }
-        $data=$this->data[$this->i];
+        $data = $this->data[$this->i];
         $this->i++;
-        $ret=new _base_data_robot();
-        $ret->type=$data['datatype'];
-        $ret->reply=$data['reply']??'';
+        $ret = new _base_data_robot();
+        $ret->type = $data['datatype'];
+        $ret->reply = $data['reply'] ?? '';
         return $ret;
     }
 }
