@@ -2,7 +2,6 @@
 
 namespace App\Class\Api\OwnThink;
 
-use App\Class\Api\OwnThink\Response\Question;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
@@ -19,16 +18,16 @@ class OwnThink
      * 聊天接口
      * @param string $spoken 聊天内容
      * @param string $user_id 用户标识
-     * @return Question
+     * @return Api\Question\Question
      */
-    public function question(string $spoken, string $user_id): Question
+    public function question(string $spoken, string $user_id): Api\Question\Question
     {
         $url = 'https://api.ownthink.com/bot';
         $response = $this->request($url, [
             'spoken' => $spoken,
             'userid' => $user_id
         ]);
-        $ret = new Question();
+        $ret = new Api\Question\Question();
         $ret->message = $response->json('message');
         $ret->type = $response->json('data.type');
         $ret->info = (object)$response->json('data.info');

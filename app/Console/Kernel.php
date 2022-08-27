@@ -25,7 +25,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('Assistant:Greet')->everyMinute();
 
         //助手 每日天气
-        $schedule->command('Assistant:Weather')->dailyAt('7:00');
+        $schedule->command('Assistant:Weather')->dailyAt('6:58');
+
+        //助手 每日天气
+        $schedule->command('Assistant:Ncov')->dailyAt('7:15');
     }
 
     /**

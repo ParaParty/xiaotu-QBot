@@ -1,7 +1,7 @@
 <?php
-namespace App\Class\Api\Tianxing\BaseResponse;
+namespace App\Class\Api\Tianxing\Api\Weather\Base;
 
-class _base_data_weather
+class WeatherData
 {
     /**
      * @var string 地区
@@ -114,4 +114,29 @@ class _base_data_weather
      */
     public string $tips;
 
+    public function __construct(array $data)
+    {
+        $this->area = $data['area'];
+        $this->date = $data['date'];
+        $this->week = $data['week'];
+        $this->weather = $data['weather'];
+        $this->real = $data['real'];
+        $this->lowest = $data['lowest'];
+        $this->highest = $data['highest'];
+        $this->wind = $data['wind'];
+        $this->windDeg = (int)$data['winddeg'];
+        $this->windSpeed = (int)$data['windspeed'];
+        $this->windSc = (int)$data['windsc'];
+        $this->sunrise = $data['sunrise'];
+        $this->sunset = $data['sunset'];
+        $this->moonrise = $data['moonrise'];
+        $this->moondown = $data['moondown'];
+        $this->pcpn = (float)$data['pcpn'];
+        $this->pop = (int)$data['pop'];
+        $this->uv_index = (int)$data['uv_index'];
+        $this->vis = (int)$data['vis'];
+        $this->humidity = (int)$data['humidity'];
+        $this->tips = $data['tips'];
+
+    }
 }

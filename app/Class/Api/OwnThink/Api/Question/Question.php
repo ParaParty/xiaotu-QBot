@@ -1,5 +1,7 @@
 <?php
-namespace App\Class\Api\OwnThink\Response;
+
+namespace App\Class\Api\OwnThink\Api\Question;
+
 class Question
 {
     /**

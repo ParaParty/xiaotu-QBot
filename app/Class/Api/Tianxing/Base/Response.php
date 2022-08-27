@@ -1,6 +1,6 @@
 <?php
-namespace App\Class\Api\Tianxing\BaseResponse;
-class _base_response
+namespace App\Class\Api\Tianxing\Base;
+class Response
 {
     /**
      * @var int 状态码
@@ -11,10 +11,5 @@ class _base_response
      * @var string 状态信息
      */
     public string $msg;
-
-    /**
-     * @var array 返回数据
-     */
-    public array $data;
 
 }

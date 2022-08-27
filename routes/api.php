@@ -48,6 +48,7 @@ use Metowolf\Meting;
 //test2
 Route::get('/test/api', static function () {
 
+
 });
 Route::get('/test/req', static function () {
     echo(Http::asJson()->post('http://qbot.xuri.team/api/index', [

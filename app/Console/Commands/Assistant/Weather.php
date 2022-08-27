@@ -57,7 +57,7 @@ class Weather extends Command
                 }
                 $result = $Api_Tianxing->weather($city);
                 if ($result->code === 200) {
-                    $weather=$result->getNextData();
+                    $weather=$result->data->getNextData();
                     if ($weather !== null) {
                         $str="{$weather->area}今日{$weather->weather}\n"
                         ."最高气温{$weather->highest}，最低气温{$weather->lowest}\n"

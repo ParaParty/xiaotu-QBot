@@ -52,7 +52,7 @@ class PrivateMessage extends Controller
         if ($cmd[0] === '绑定城市' && isset($cmd[1])) {
             $result = $Api_Tianxing->weather($cmd[1]);
             if ($result->code !== 200
-                || ($weather = $result->getNextData()) === null) {
+                || ($weather = $result->data->getNextData()) === null) {
                 return $qbot->rapidResponse('绑定失败，该城市不存在');
             }
             QBotDB::setUserData($fromData->user_id, '助手系统->我的助手->城市', $weather->area);
@@ -69,7 +69,7 @@ class PrivateMessage extends Controller
                 if ($robot->code !== 200) {
                     return $qbot->rapidResponse('系统繁忙请稍后再试，如若多次出现请联系管理员');
                 }
-                if (($data = $robot->getNextData())->type !== 'text') {
+                if (($data = $robot->data->getNextData())->type !== 'text') {
                     return $qbot->rapidResponse('暂不支持的返回类型，正在开发中');
                 }
                 return $qbot->rapidResponse($data->reply);

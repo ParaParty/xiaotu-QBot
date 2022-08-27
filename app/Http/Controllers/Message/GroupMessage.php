@@ -271,7 +271,7 @@ class GroupMessage extends Controller
             if ($ret !== true) {
                 return $qbot->rapidResponse(TCode::at($fromData->user_id) . $ret);
             }
-            $search = WangZheRongYao::search_other($nickName);
+            $search = WangZheRongYao::search($nickName);
             if ($search === false) {
                 return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' 未知错误');
             }
