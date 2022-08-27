@@ -151,7 +151,7 @@ class GroupMessage extends Controller
                     if ($robot->code !== 200) {
                         return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' 系统繁忙请稍后再试，如若多次出现请联系管理员');
                     }
-                    if (($data = $robot->getNextData())->type !== 'text') {
+                    if (($data = $robot->data->getNextData())->type !== 'text') {
                         return $qbot->rapidResponse(TCode::at($fromData->user_id) . ' 暂不支持的返回类型，正在开发中');
                     }
                     if (!str_contains($data->reply, '<br>')) {
