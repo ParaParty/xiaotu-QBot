@@ -16,10 +16,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         //每日 60s读懂世界
-        $schedule->command('Message:EveryDayNews')->dailyAt('7:00');
+        $schedule->command('Message:EveryDayNews')->dailyAt('7:35');
 
         //助手 60s读懂世界
-        $schedule->command('Assistant:EveryDayNews')->dailyAt('8:00');
+        $schedule->command('Assistant:EveryDayNews')->dailyAt('7:20');
 
         //助手 问候
         $schedule->command('Assistant:Greet')->everyMinute();

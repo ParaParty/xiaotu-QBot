@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -12,12 +11,17 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
-Route::get('/', function () {
+Route::get('/', static function () {
     return view('welcome');
 });
 
 //文档  暂定
-Route::get('/help', function () {
+Route::get('/help', static function () {
     return redirect()->away('https://1m29yvnp67.k.topthink.com/@xuriqbot');
+});
+
+Route::get('/text/{key}', static function (string $key) {
+    return view('text',[
+        'key'=>$key
+    ]);
 });

@@ -5,8 +5,17 @@ namespace App\Console\Commands\Assistant;
 use App\Class\Api\Tianxing\Tianxing;
 use App\Class\QBotDB;
 use App\Class\QBotHttpApi;
+use App\Class\TCode;
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelLow;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use JsonException;
 
 class Ncov extends Command
@@ -82,17 +91,30 @@ class Ncov extends Command
                         }
                         $qbot->send_private_msg($item->user_id, '小梦查到了绑定城市有高风险区'
                             . count($areaData['high']) . '个，中风险区' . count($areaData['mid']) . '个');
-                        $high = implode("\n", $areaData['high']);
+                        $high = implode('<br>', $areaData['high']);
                         if ($high === '') {
                             $high = '无';
                         }
-                        $mid = implode("\n", $areaData['mid']);
+                        $mid = implode('<br>', $areaData['mid']);
                         if ($mid === '') {
                             $mid = '无';
                         }
-                        $qbot->send_private_msg($item->user_id, "高风险地区：\n$high");
-                        $qbot->send_private_msg($item->user_id, "中风险地区：\n$mid");
-
+                        $str="<h1>高风险区：<br>$high<hr>中风险区：<br>$mid</h1>";
+                        do {
+                            $key=bin2hex(random_bytes(3));
+                        } while (Cache::has($key));
+                        Cache::put($key,$str,now()->addHours(24));
+                        $qrCode = QrCode::create(URL::to('/')."/text/$key")
+                            ->setEncoding(new Encoding('UTF-8'))
+                            ->setErrorCorrectionLevel(new ErrorCorrectionLevelLow())
+                            ->setSize(200)
+                            ->setMargin(10)
+                            ->setRoundBlockSizeMode(new RoundBlockSizeModeMargin())
+                            ->setForegroundColor(new Color(0, 0, 0))
+                            ->setBackgroundColor(new Color(255, 255, 255));
+                        $writer = new PngWriter();
+                        $img = 'base64://' . substr($writer->write($qrCode)->getDataUri(), 22);
+                        $qbot->send_private_msg($item->user_id, '查看风险地区：'.TCode::image($img));
                         return 0;
                     });
             }
